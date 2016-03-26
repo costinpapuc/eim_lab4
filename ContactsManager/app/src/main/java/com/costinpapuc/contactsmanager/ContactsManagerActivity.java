@@ -1,11 +1,10 @@
 package com.costinpapuc.contactsmanager;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.ContactsContract;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -14,13 +13,17 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
 public class ContactsManagerActivity extends AppCompatActivity {
 
+    final public static int CONTACTS_MANAGER_REQUEST_CODE = 1;
+
     private class MyButtonListener implements View.OnClickListener {
         @Override
+
         public void onClick(View v) {
             Button button = (Button)v;
             if (button.getId() == R.id.show_button) {
@@ -78,9 +81,10 @@ public class ContactsManagerActivity extends AppCompatActivity {
                     contactData.add(imRow);
                 }
                 intent.putParcelableArrayListExtra(ContactsContract.Intents.Insert.DATA, contactData);
-                startActivity(intent);
+                startActivityForResult(intent, CONTACTS_MANAGER_REQUEST_CODE);
             }
             if (button.getId() == R.id.cancel_button) {
+                setResult(Activity.RESULT_CANCELED, new Intent());
                 finish();
             }
 
@@ -88,9 +92,22 @@ public class ContactsManagerActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch(requestCode) {
+            case CONTACTS_MANAGER_REQUEST_CODE:
+                setResult(resultCode, new Intent());
+                finish();
+                break;
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contacts_manager);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         Button showButton   = (Button)findViewById(R.id.show_button);
         Button saveButton   = (Button)findViewById(R.id.save_button);
@@ -100,6 +117,17 @@ public class ContactsManagerActivity extends AppCompatActivity {
         showButton.setOnClickListener(myButtonListener);
         saveButton.setOnClickListener(myButtonListener);
         cancelButton.setOnClickListener(myButtonListener);
+
+        EditText numberEditText = (EditText)findViewById(R.id.number_edit_text);
+        Intent intent = getIntent();
+        if (intent != null) {
+            String phone = intent.getStringExtra("com.costinpapuc.contactsmanager.PHONE_NUMBER_KEY");
+            if (phone != null) {
+                numberEditText.setText(phone);
+            } else {
+                Toast.makeText(this, getResources().getString(R.string.phone_number_error), Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
     @Override
